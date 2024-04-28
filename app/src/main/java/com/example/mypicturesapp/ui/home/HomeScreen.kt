@@ -240,7 +240,8 @@ fun CompactResultScreen(
             contentAlignment = Alignment.Center,
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = stringResource(id = R.string.saved_pictures),
@@ -264,7 +265,8 @@ fun CompactResultScreen(
             contentAlignment = Alignment.Center,
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = stringResource(id = R.string.network_site),

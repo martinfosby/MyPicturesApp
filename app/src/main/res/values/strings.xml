@@ -36,4 +36,5 @@
     <string name="saved_pictures">Lagrede bilder</string>
     <string name="network_site">jsonplaceholder.typicode.com</string>
     <string name="delete">Slett</string>
+    <string name="error_getting_repository">Fikk ikke hente bilder</string>
 </resources>
