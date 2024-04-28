@@ -18,13 +18,13 @@ package com.example.mypicturesapp.ui.utils
 /**
  * Different type of navigation supported by app depending on size and state.
  */
-enum class ReplyNavigationType {
+enum class PictureNavigationType {
     BOTTOM_NAVIGATION, NAVIGATION_RAIL, PERMANENT_NAVIGATION_DRAWER
 }
 
 /**
  * Content shown depending on size and state of device.
  */
-enum class ReplyContentType {
-    LIST_ONLY, LIST_AND_DETAIL
+enum class PictureContentType {
+    LIST_COLUMN, LIST_ROW
 }

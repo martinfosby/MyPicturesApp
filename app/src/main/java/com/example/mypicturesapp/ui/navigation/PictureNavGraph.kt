@@ -20,7 +20,6 @@ import android.os.Build
 import androidx.annotation.RequiresExtension
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -30,9 +29,7 @@ import com.example.mypicturesapp.ui.details.DetailsDestination
 import com.example.mypicturesapp.ui.home.HomeDestination
 import com.example.mypicturesapp.ui.home.HomeScreen
 import com.example.mypicturesapp.ui.details.DetailsScreen
-import com.example.mypicturesapp.ui.details.DetailsViewModel
-import com.example.mypicturesapp.ui.home.HomeViewModel
-import kotlinx.coroutines.launch
+import com.example.mypicturesapp.ui.utils.PictureContentType
 
 /**
  * Provides Navigation graph for the application.
@@ -42,6 +39,7 @@ import kotlinx.coroutines.launch
 fun PictureNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    contentType: PictureContentType,
 ) {
     NavHost(
         navController = navController,
@@ -53,6 +51,7 @@ fun PictureNavHost(
                 onShowClicked = {
                     navController.navigate("${DetailsDestination.route}/${it}")
                 },
+                contentType = contentType,
             )
         }
         composable(

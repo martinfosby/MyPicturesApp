@@ -23,4 +23,6 @@ class OfflinePicturesRepository(private val pictureDao: PictureDao): PicturesRep
     fun getAllPicturesStream(): Flow<List<PictureEntity>> = pictureDao.getAllPictures()
     fun getPictureStream(id: Int): Flow<PictureEntity?> = pictureDao.getPicture(id)
     suspend fun insert(item: PictureEntity) = pictureDao.insert(item)
+    suspend fun delete(item: PictureEntity) = pictureDao.delete(item)
+
 }

@@ -18,10 +18,13 @@ package com.example.mypicturesapp.ui.home
 import android.os.Build
 import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -49,15 +52,18 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mypicturesapp.R
 import com.example.mypicturesapp.data.network.PictureRemote
+import com.example.mypicturesapp.data.offline.PictureEntity
 import com.example.mypicturesapp.model.PictureInterface
 import com.example.mypicturesapp.ui.AppViewModelProvider
 import com.example.mypicturesapp.ui.PicturesTopAppBar
 import com.example.mypicturesapp.ui.navigation.NavigationDestination
 import com.example.mypicturesapp.ui.theme.MyPicturesAppTheme
+import com.example.mypicturesapp.ui.utils.PictureContentType
 import kotlinx.coroutines.launch
 
 object HomeDestination : NavigationDestination {
@@ -71,7 +77,8 @@ object HomeDestination : NavigationDestination {
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onShowClicked: (Int) -> Unit = {},
-    viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    contentType: PictureContentType,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -94,9 +101,15 @@ fun HomeScreen(
                     viewModel.savePicture(it)
                 }
             },
+            onDeleteClicked = {
+                coroutineScope.launch {
+                    viewModel.deletePicture(it)
+                }
+            },
             onShowClicked = onShowClicked,
             modifier = modifier.fillMaxSize(),
             contentPadding = innerPadding,
+            contentType = contentType,
         )
     }
 }
@@ -109,33 +122,25 @@ fun HomeBody(
     retryAction: () -> Unit,
     onSaveClicked: (PictureInterface) -> Unit = {},
     onShowClicked: (Int) -> Unit = {},
+    onDeleteClicked: (PictureInterface) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    contentType: PictureContentType,
 ) {
     when (homeNetworkUiState) {
         is HomeNetworkUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
         is HomeNetworkUiState.Success -> {
-            LazyColumn(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = modifier
-            ) {
-                item {
-                    ResultScreen(
-                        photos = homeOfflineUiState.pictureList,
-                        onShowClicked = onShowClicked,
-                        onSaveClicked = onSaveClicked,
-                        contentPadding=contentPadding,
-                    )
-                }
-                item {
-                    ResultScreen(
-                        photos = homeNetworkUiState.photos,
-                        onShowClicked = onShowClicked,
-                        onSaveClicked = onSaveClicked,
-                        contentPadding=contentPadding,
-                    )
-                }
-            }
+            ResultScreen(
+                networkPhotos = homeNetworkUiState.photos,
+                offlinePhotos = homeOfflineUiState.pictureList,
+                onSaveClicked = onSaveClicked,
+                onShowClicked = onShowClicked,
+                onDeleteClicked = onDeleteClicked,
+                contentPadding = contentPadding,
+                modifier = modifier.fillMaxSize(),
+                contentType = contentType,
+            )
         }
+
         is HomeNetworkUiState.Error -> ErrorScreen(
             modifier = modifier.fillMaxSize(),
             retryAction = retryAction
@@ -181,20 +186,163 @@ fun ErrorScreen(retryAction: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 fun ResultScreen(
     modifier: Modifier = Modifier,
+    contentType: PictureContentType,
+    networkPhotos: List<PictureRemote>,
+    offlinePhotos: List<PictureEntity>,
     onSaveClicked: (PictureInterface) -> Unit = {},
     onShowClicked: (Int) -> Unit = {},
-    photos: List<PictureInterface>,
+    onDeleteClicked: (PictureInterface) -> Unit = {},
     contentPadding: PaddingValues,
 ) {
-    PhotosColumnScreen(
-        photos,
-        modifier,
-        onSaveClicked = onSaveClicked,
-        onShowClicked = onShowClicked,
-        contentPadding = contentPadding
-    )
+    if (contentType == PictureContentType.LIST_COLUMN) {
+        CompactResultScreen(
+            networkPhotos = networkPhotos,
+            offlinePhotos = offlinePhotos,
+            modifier = modifier,
+            onSaveClicked = onSaveClicked,
+            onShowClicked = onShowClicked,
+            onDeleteClicked = onDeleteClicked,
+            contentPadding = contentPadding,
+        )
+    } else {
+        WideResultScreen(
+            networkPhotos = networkPhotos,
+            offlinePhotos = offlinePhotos,
+            modifier = modifier,
+            onSaveClicked = onSaveClicked,
+            onShowClicked = onShowClicked,
+            onDeleteClicked = onDeleteClicked,
+            contentPadding = contentPadding,
+        )
+    }
 }
 
+@Composable
+fun CompactResultScreen(
+    modifier: Modifier = Modifier,
+    networkPhotos: List<PictureRemote>,
+    offlinePhotos: List<PictureEntity>,
+    onSaveClicked: (PictureInterface) -> Unit = {},
+    onShowClicked: (Int) -> Unit = {},
+    onDeleteClicked: (PictureInterface) -> Unit = {},
+    contentPadding: PaddingValues,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.padding(contentPadding)
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(dimensionResource(id = R.dimen.medium_padding))
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    text = stringResource(id = R.string.saved_pictures),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                PhotosColumnScreen(
+                    photos = offlinePhotos,
+                    onShowClicked = onShowClicked,
+                    onSaveClicked = onSaveClicked,
+                    onDeleteClicked = onDeleteClicked,
+                    contentPadding = contentPadding,
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(dimensionResource(id = R.dimen.medium_padding))
+                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    text = stringResource(id = R.string.network_site),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                PhotosColumnScreen(
+                    photos = networkPhotos,
+                    onShowClicked = onShowClicked,
+                    onSaveClicked = onSaveClicked,
+                    onDeleteClicked = onDeleteClicked,
+                    contentPadding = contentPadding,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun WideResultScreen(
+    modifier: Modifier = Modifier,
+    networkPhotos: List<PictureRemote>,
+    offlinePhotos: List<PictureEntity>,
+    onSaveClicked: (PictureInterface) -> Unit = {},
+    onShowClicked: (Int) -> Unit = {},
+    onDeleteClicked: (PictureInterface) -> Unit = {},
+    contentPadding: PaddingValues,
+) {
+    Row(
+        modifier = modifier.padding(contentPadding)
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(dimensionResource(id = R.dimen.medium_padding))
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(id = R.string.saved_pictures),
+                    style = MaterialTheme.typography.titleLarge
+                )
+                PhotosColumnScreen(
+                    photos = offlinePhotos,
+                    onShowClicked = onShowClicked,
+                    onSaveClicked = onSaveClicked,
+                    onDeleteClicked = onDeleteClicked,
+                    contentPadding = contentPadding,
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(dimensionResource(id = R.dimen.medium_padding))
+                .background(MaterialTheme.colorScheme.secondaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(id = R.string.network_site),
+                    style = MaterialTheme.typography.titleLarge
+                )
+                PhotosColumnScreen(
+                    photos = networkPhotos,
+                    onShowClicked = onShowClicked,
+                    onSaveClicked = onSaveClicked,
+                    onDeleteClicked = onDeleteClicked,
+                    contentPadding = contentPadding,
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun PhotosColumnScreen(
@@ -202,6 +350,7 @@ fun PhotosColumnScreen(
     modifier: Modifier = Modifier,
     onSaveClicked: (PictureInterface) -> Unit = {},
     onShowClicked: (Int) -> Unit = {},
+    onDeleteClicked: (PictureInterface) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     LazyColumn(
@@ -213,6 +362,7 @@ fun PhotosColumnScreen(
                 photo = photo,
                 onSaveClicked = onSaveClicked,
                 onShowClicked = onShowClicked,
+                onDeleteClicked = onDeleteClicked,
                 modifier = modifier
                     .padding(4.dp)
                     .fillMaxWidth()
@@ -227,6 +377,7 @@ fun MyPictureCard(
     modifier: Modifier = Modifier,
     onSaveClicked: (PictureInterface) -> Unit = {},
     onShowClicked: (Int) -> Unit = {},
+    onDeleteClicked: (PictureInterface) -> Unit = {},
     photo: PictureInterface,
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.Start) {
@@ -247,7 +398,10 @@ fun MyPictureCard(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.small_padding))
             ) {
-                Text(text = stringResource(id = R.string.title), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = stringResource(id = R.string.title),
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Text(text = photo.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Row(
@@ -255,7 +409,10 @@ fun MyPictureCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row {
-                    Text(text = stringResource(id = R.string.id), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = stringResource(id = R.string.id),
+                        style = MaterialTheme.typography.titleMedium
+                    )
                     Text(text = photo.id.toString(), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Row(
@@ -263,16 +420,23 @@ fun MyPictureCard(
                     Button(onClick = { onShowClicked(photo.id) }) {
                         Text(text = stringResource(id = R.string.show))
                     }
-                    Button(onClick = { onSaveClicked(photo) }) {
-                        Text(text = stringResource(id = R.string.save))
+                    Spacer(modifier = Modifier.padding(dimensionResource(id = R.dimen.small_padding)))
+                    if (photo is PictureRemote) {
+                        Button(onClick = { onSaveClicked(photo) }) {
+                            Text(text = stringResource(id = R.string.save))
+                        }
+                    } else {
+                        Button(onClick = { onDeleteClicked(photo) }) {
+                            Text(text = stringResource(id = R.string.delete))
+                        }
                     }
+
                 }
 
             }
         }
     }
 }
-
 
 
 @Preview(showBackground = true)

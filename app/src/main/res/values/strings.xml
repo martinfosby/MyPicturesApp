@@ -33,4 +33,7 @@
     <string name="navigation_bottom">Navigation Bottom</string>
     <string name="navigation_back">Back</string>
     <string name="back_button">Back button</string>
+    <string name="saved_pictures">Lagrede bilder</string>
+    <string name="network_site">jsonplaceholder.typicode.com</string>
+    <string name="delete">Slett</string>
 </resources>

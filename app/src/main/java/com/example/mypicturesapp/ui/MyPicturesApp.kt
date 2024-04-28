@@ -32,14 +32,12 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.mypicturesapp.R
 import com.example.mypicturesapp.ui.navigation.PictureNavHost
-import com.example.mypicturesapp.ui.home.HomeViewModel
-import com.example.mypicturesapp.ui.utils.ReplyContentType
-import com.example.mypicturesapp.ui.utils.ReplyNavigationType
+import com.example.mypicturesapp.ui.utils.PictureContentType
+import com.example.mypicturesapp.ui.utils.PictureNavigationType
 
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
@@ -47,29 +45,32 @@ fun MyPicturesApp(
     windowSize: WindowWidthSizeClass,
     navController: NavHostController = rememberNavController(),
     ) {
-        PictureNavHost(navController = navController)
-//
-//        val navigationType: ReplyNavigationType
-//        val contentType: ReplyContentType
-//
-//        when (windowSize) {
-//            WindowWidthSizeClass.Compact -> {
-//                navigationType = ReplyNavigationType.BOTTOM_NAVIGATION
-//                contentType = ReplyContentType.LIST_ONLY
-//            }
-//            WindowWidthSizeClass.Medium -> {
-//                navigationType = ReplyNavigationType.NAVIGATION_RAIL
-//                contentType = ReplyContentType.LIST_ONLY
-//            }
-//            WindowWidthSizeClass.Expanded -> {
-//                navigationType = ReplyNavigationType.PERMANENT_NAVIGATION_DRAWER
-//                contentType = ReplyContentType.LIST_AND_DETAIL
-//            }
-//            else -> {
-//                navigationType = ReplyNavigationType.BOTTOM_NAVIGATION
-//                contentType = ReplyContentType.LIST_ONLY
-//            }
-//        }
+
+        val navigationType: PictureNavigationType
+        val contentType: PictureContentType
+
+        when (windowSize) {
+            WindowWidthSizeClass.Compact -> {
+                navigationType = PictureNavigationType.BOTTOM_NAVIGATION
+                contentType = PictureContentType.LIST_COLUMN
+            }
+            WindowWidthSizeClass.Medium -> {
+                navigationType = PictureNavigationType.NAVIGATION_RAIL
+                contentType = PictureContentType.LIST_ROW
+            }
+            WindowWidthSizeClass.Expanded -> {
+                navigationType = PictureNavigationType.PERMANENT_NAVIGATION_DRAWER
+                contentType = PictureContentType.LIST_ROW
+            }
+            else -> {
+                navigationType = PictureNavigationType.BOTTOM_NAVIGATION
+                contentType = PictureContentType.LIST_COLUMN
+            }
+        }
+        PictureNavHost(
+            navController = navController,
+            contentType = contentType,
+            )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

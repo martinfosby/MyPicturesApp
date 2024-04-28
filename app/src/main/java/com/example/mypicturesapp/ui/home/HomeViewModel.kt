@@ -60,7 +60,7 @@ class HomeViewModel(
     var homeNetworkUiState: HomeNetworkUiState by mutableStateOf(HomeNetworkUiState.Loading)
         private set
 
-    val homeOfflineUiState: StateFlow<HomeOfflineUiState> =
+    var homeOfflineUiState: StateFlow<HomeOfflineUiState> =
         offlinePicturesRepository.getAllPicturesStream().map { HomeOfflineUiState(it) }
             .filterNotNull()
             .stateIn(
@@ -93,6 +93,9 @@ class HomeViewModel(
         offlinePicturesRepository.insert(pictureInterface.toPictureEntity())
     }
 
+    suspend fun deletePicture(pictureInterface: PictureInterface) {
+        offlinePicturesRepository.delete(pictureInterface.toPictureEntity())
+    }
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
